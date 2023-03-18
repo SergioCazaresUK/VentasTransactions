@@ -13,6 +13,6 @@ namespace AccesoDatos
         public DateTime Fecha { get; set; }
         public int ClienteId { get; set; }
         public decimal Total { get; set; }
-        public List<VentaDetalle> Conceptos { get; set; }
+        public List<VentaDetalle> Conceptos { get; set; } = new List<VentaDetalle>();     
     }
 }
