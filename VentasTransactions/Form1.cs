@@ -69,12 +69,63 @@ namespace VentasTransactions
                             }
                         }
 
+                        Venta venta = new Venta();
+                        venta.ClienteId = 1;
+                        venta.Folio = folioActual + 1;
+                        venta.Fecha = DateTime.Now;
+                        query = "INSERT INTO Ventas (Folio,Fecha,ClienteId,Total) VALUES (@Folio,@Fecha,@ClienteId,@Total); select scope_identity()";
+                        using(SqlCommand cmd = new SqlCommand(query, con))
+                        {
+                            cmd.CommandType = CommandType.Text;
+                            cmd.Transaction = transaction;
+                            cmd.Parameters.AddWithValue("@Folio",venta.Folio);
+                            cmd.Parameters.AddWithValue("@Fecha", venta.Fecha);
+                            cmd.Parameters.AddWithValue("@ClienteId", venta.ClienteId);
+                            cmd.Parameters.AddWithValue("@Total", venta.Total);
+                            
+                            if (!int.TryParse(cmd.ExecuteScalar().ToString(), out int idVenta))
+                            {
+                                throw new Exception("Ocurrio un error al obtener el Id de la venta");
+                            }
+                            venta.Id = idVenta;
+                        }
 
+                        foreach(VentaDetalle concepto in venta.Conceptos)
+                        {
+                            using(SqlCommand cmd = new SqlCommand(query, con))
+                            {
+                                cmd.CommandType = CommandType.Text;
+                                cmd.Transaction = transaction;
+                                query = "INSERT INTO VentasDetalles(VentaId,ProductoId,Cantidad,Descripcion,PrecioUnitario,Importe)VALUES(@VentaId,@ProductoId,@Cantidad, @Descripcion, @PrecioUnitario, @Importe)";
+                                //@VentaId,@ProductoId,@Cantidad, @Descripcion, @PrecioUnitario, @Importe
+                                cmd.Parameters.AddWithValue("@VentaId", venta.Id);
+                                cmd.Parameters.AddWithValue("@ProductoId", concepto.ProductoId);
+                                cmd.Parameters.AddWithValue("@Cantidad", concepto.Cantidad);
+                                cmd.Parameters.AddWithValue("@Descripcion", concepto.Descripcion);
+                                cmd.Parameters.AddWithValue("@PrecioUnitario", concepto.PrecioUnitario);
+                                cmd.Parameters.AddWithValue("@Importe", concepto.Importe);
+                                cmd.ExecuteNonQuery();
+                            }
 
+                            using (SqlCommand cmd = new SqlCommand(query, con))
+                            {
+                                cmd.CommandType = CommandType.Text;
+                                cmd.Transaction = transaction;
+                                query = "UPDATE Existencias set Existencia = Existencia-@Cantidad where ProductoId = @ProductoId";
+                                //@VentaId,@ProductoId,@Cantidad, @Descripcion, @PrecioUnitario, @Importe
+                                cmd.Parameters.AddWithValue("@ProductoId", concepto.ProductoId);
+                                cmd.Parameters.AddWithValue("@Cantidad", concepto.Cantidad);
+                                cmd.ExecuteNonQuery();
+                            }
+                        }
 
-
-
-
+                        using (SqlCommand cmd = new SqlCommand(query, con))
+                        {
+                            cmd.CommandType = CommandType.Text;
+                            cmd.Transaction = transaction;
+                            query = "UPDATE Folios set Folio = Folio + 1";
+                            cmd.ExecuteNonQuery();
+                        }
 
                         transaction.Commit();
                     }
