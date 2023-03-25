@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Data.SqlClient;
 using System.Drawing;
 using System.Linq;
 using System.Text;
@@ -41,6 +42,55 @@ namespace VentasTransactions
 
             venta.Conceptos.Add(producto1);
             venta.Conceptos.Add(producto2);
+        }
+
+        //Debemos reubicar este metodo.
+        private void GuardarVenta()
+        {
+            try
+            {
+                using (SqlConnection con = new SqlConnection(Conexion.ConnectionString))
+                {
+                    SqlTransaction transaction;
+                    con.Open();
+                    transaction = con.BeginTransaction();
+
+                    try
+                    {
+                        string query = "select top(1) Folio from Folios";
+                        int folioActual = 0;
+                        using(SqlCommand cmd = new SqlCommand(query,con))
+                        {
+                            cmd.CommandType = CommandType.Text;
+                            cmd.Transaction = transaction;
+                            if(!int.TryParse(cmd.ExecuteScalar().ToString(),out folioActual))
+                            {
+                                throw new Exception("Ocurrio un error al obtener el Folio");
+                            }
+                        }
+
+
+
+
+
+
+
+
+                        transaction.Commit();
+                    }
+                    catch (Exception ex)
+                    {
+                        transaction.Rollback();
+                        throw new Exception(ex.Message);
+                    }
+                    
+                }
+            }
+            catch (Exception ex)
+            {
+
+                MessageBox.Show($"Ocurrio un error al guardar la venta {ex.Message}");
+            }
         }
     }
 }
