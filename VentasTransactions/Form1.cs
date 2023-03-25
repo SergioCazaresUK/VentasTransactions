@@ -97,7 +97,6 @@ namespace VentasTransactions
                                 cmd.CommandType = CommandType.Text;
                                 cmd.Transaction = transaction;
                                 query = "INSERT INTO VentasDetalles(VentaId,ProductoId,Cantidad,Descripcion,PrecioUnitario,Importe)VALUES(@VentaId,@ProductoId,@Cantidad, @Descripcion, @PrecioUnitario, @Importe)";
-                                //@VentaId,@ProductoId,@Cantidad, @Descripcion, @PrecioUnitario, @Importe
                                 cmd.Parameters.AddWithValue("@VentaId", venta.Id);
                                 cmd.Parameters.AddWithValue("@ProductoId", concepto.ProductoId);
                                 cmd.Parameters.AddWithValue("@Cantidad", concepto.Cantidad);
@@ -112,7 +111,6 @@ namespace VentasTransactions
                                 cmd.CommandType = CommandType.Text;
                                 cmd.Transaction = transaction;
                                 query = "UPDATE Existencias set Existencia = Existencia-@Cantidad where ProductoId = @ProductoId";
-                                //@VentaId,@ProductoId,@Cantidad, @Descripcion, @PrecioUnitario, @Importe
                                 cmd.Parameters.AddWithValue("@ProductoId", concepto.ProductoId);
                                 cmd.Parameters.AddWithValue("@Cantidad", concepto.Cantidad);
                                 cmd.ExecuteNonQuery();
